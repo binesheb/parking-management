@@ -65,7 +65,7 @@ void startMaster() {
     r->send(ok ? 200 : 409, "application/json", ok ? "{\"ok\":true}" : "{\"ok\":false}");
   });
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *r) {
-    r->send(200, "text/html", "<h1>Parking Management</h1><h2 id='n'>Loading...</h2><script>async function x(){let s=await fetch('/api/state').then(r=>r.json());document.getElementById('n').innerText=s.available+' slots available';}x();setInterval(x,2000)</script>");
+    r->send(200, "text/html", "<h1>Parking Management</h1><h2 id='n'>Loading...</h2><p id='e'></p><script>async function x(){try{let r=await fetch('/api/state');if(!r.ok)throw Error();let s=await r.json();document.getElementById('n').innerText=s.available+' slots available';document.getElementById('e').innerText='';}catch(e){document.getElementById('e').innerText='Waiting for connection…';}}x();setInterval(x,2000)</script>");
   });
   server.begin();
 }
