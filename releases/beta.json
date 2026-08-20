@@ -1,0 +1,13 @@
+{
+  "channel": "beta",
+  "version": "0.1.0",
+  "minimum_supported_version": "0.1.0",
+  "mandatory": false,
+  "firmware": {
+    "url": null,
+    "sha256": null,
+    "size": null
+  },
+  "release_notes": "Initial beta baseline. No beta firmware artifact is published yet.",
+  "published_at": "2026-08-20T00:00:00Z"
+}
