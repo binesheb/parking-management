@@ -1,0 +1,35 @@
+{
+  "device": {
+    "name": "Parking Display",
+    "role": "display",
+    "enabled": true
+  },
+  "network": {
+    "mode": "station",
+    "auto_discover_master": true,
+    "master_url": ""
+  },
+  "display": {
+    "driver": "hub75",
+    "panel_width": 80,
+    "panel_height": 40,
+    "panels_horizontal": 1,
+    "panels_vertical": 1,
+    "brightness": 64,
+    "scan_profile": "auto",
+    "color_order": "rgb"
+  },
+  "content": {
+    "mode": "parking_availability",
+    "header": "JAYALAKSHMI SILKS",
+    "normal_message": "PARKING AVAILABLE",
+    "low_message": "LIMITED PARKING",
+    "full_message": "PARKING FULL",
+    "low_threshold": 5
+  },
+  "ota": {
+    "channel": "stable",
+    "auto_update": false,
+    "check_interval_hours": 12
+  }
+}
