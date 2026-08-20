@@ -1,0 +1,13 @@
+{
+  "channel": "stable",
+  "version": "0.1.0",
+  "minimum_supported_version": "0.1.0",
+  "mandatory": false,
+  "firmware": {
+    "url": null,
+    "sha256": null,
+    "size": null
+  },
+  "release_notes": "Initial Parking Management baseline. OTA firmware artifacts will be attached starting with the first validated firmware release.",
+  "published_at": "2026-08-20T00:00:00Z"
+}
