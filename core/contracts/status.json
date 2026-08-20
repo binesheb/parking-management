@@ -1,0 +1,23 @@
+{
+  "site_id": "palarivattom",
+  "revision": 0,
+  "status": "available",
+  "capacity": 50,
+  "occupied": 15,
+  "available": 35,
+  "areas": [
+    {
+      "id": "main",
+      "name": "Main Parking",
+      "capacity": 50,
+      "occupied": 15,
+      "available": 35
+    }
+  ],
+  "prediction": {
+    "next_slot_minutes": null,
+    "confidence": "unknown",
+    "sample_count": 0
+  },
+  "updated_at": null
+}
