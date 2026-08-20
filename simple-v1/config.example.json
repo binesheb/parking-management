@@ -1,0 +1,8 @@
+{
+  "site_name": "Palarivattom",
+  "total_capacity": 50,
+  "occupied": 0,
+  "controller_id": "controller-01",
+  "display_id": "display-01",
+  "server_port": 8080
+}
