@@ -1,0 +1,1 @@
+{"name":"parking-management-api","version":"0.2.0","private":true,"type":"module","engines":{"node":">=24"},"dependencies":{"fastify":"5.10.0"},"scripts":{"start":"node src/server.js","test":"node --test"}}

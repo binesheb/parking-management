@@ -1,0 +1,8 @@
+services:
+  api:
+    build: ./server
+    ports: ["8080:8080"]
+    volumes: ["parking-data:/app/data"]
+    restart: unless-stopped
+volumes:
+  parking-data:
