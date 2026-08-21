@@ -6,15 +6,23 @@ Any future automatic firmware update mechanism must use this repository's `main`
 
 Before applying an automatic update, the device or deployment should verify that the candidate is newer, complete any required dependency/build preparation, validate the artifact where supported, and keep a recovery path to the previously known-good firmware.
 
-## Manual development update
+## Manual source update
 
-From a clean checkout:
+From a clean checkout on `main`:
+
+```bash
+./scripts/update.sh
+```
+
+The updater refuses to run when local changes are present, the current branch is not `main`, or local history has diverged from `origin/main`. It fetches only `origin/main`, performs a fast-forward-only update, then runs the dependency/bootstrap validation.
+
+For the initial validation of a checkout:
 
 ```bash
 ./scripts/bootstrap.sh
 ```
 
-The helper installs the dependencies declared by `firmware/platformio.ini` and builds the firmware. It does not modify device configuration or flash hardware.
+The bootstrap helper installs the dependencies declared by `firmware/platformio.ini` and builds the firmware. It does not modify device configuration or flash hardware.
 
 ## Manual firmware recovery
 
