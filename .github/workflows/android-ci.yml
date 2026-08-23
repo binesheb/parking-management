@@ -6,8 +6,7 @@ on:
   pull_request:
     branches: [main]
 permissions:
-  contents: write
-  actions: read
+  contents: read
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -26,10 +25,14 @@ jobs:
         run: echo "sha=$(sha256sum app/build/outputs/apk/debug/app-debug.apk | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
       - name: Release APK
         if: startsWith(github.ref, 'refs/tags/v')
+        permissions:
+          contents: write
         env: { GH_TOKEN: '${{ github.token }}' }
         run: gh release create "$GITHUB_REF_NAME" app/build/outputs/apk/debug/app-debug.apk#parking-management.apk --generate-notes
       - name: Publish verified update manifest
         if: startsWith(github.ref, 'refs/tags/v')
+        permissions:
+          contents: write
         env: { APK_SHA: '${{ steps.sha.outputs.sha }}', GITHUB_REF_NAME: '${{ github.ref_name }}', GITHUB_REPOSITORY: '${{ github.repository }}' }
         run: |
           git fetch origin main
