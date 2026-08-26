@@ -21,24 +21,36 @@ jobs:
         with: { name: parking-management-debug-apk, path: app/build/outputs/apk/debug/app-debug.apk }
       - uses: actions/upload-artifact@v4
         with: { name: parking-management-release-apk, path: app/build/outputs/apk/release/app-release-unsigned.apk }
+  server:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: server } }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with: { node-version: '24' }
+      - run: npm install --package-lock-only
+      - run: npm ci
+      - run: npm test
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: android
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: parking-management-debug-apk, path: dist }
       - name: Calculate APK SHA-256
-        if: startsWith(github.ref, 'refs/tags/v')
         id: sha
-        run: echo "sha=$(sha256sum app/build/outputs/apk/debug/app-debug.apk | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+        run: echo "sha=$(sha256sum dist/app-debug.apk | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
       - name: Release APK
-        if: startsWith(github.ref, 'refs/tags/v')
-        permissions:
-          contents: write
         env: { GH_TOKEN: '${{ github.token }}' }
-        run: gh release create "$GITHUB_REF_NAME" app/build/outputs/apk/debug/app-debug.apk#parking-management.apk --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/app-debug.apk#parking-management.apk --generate-notes
+      - uses: actions/checkout@v6
+        with: { ref: main }
       - name: Publish verified update manifest
-        if: startsWith(github.ref, 'refs/tags/v')
-        permissions:
-          contents: write
         env: { APK_SHA: '${{ steps.sha.outputs.sha }}', GITHUB_REF_NAME: '${{ github.ref_name }}', GITHUB_REPOSITORY: '${{ github.repository }}' }
         run: |
-          git fetch origin main
-          git checkout main
           python3 - <<'PY'
           import json, os
           p='releases/android.json'
@@ -51,13 +63,3 @@ jobs:
           git add releases/android.json
           git commit -m "chore(release): publish Android update manifest" || true
           git push origin main
-  server:
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: server } }
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v5
-        with: { node-version: '24' }
-      - run: npm install --package-lock-only
-      - run: npm ci
-      - run: npm test
