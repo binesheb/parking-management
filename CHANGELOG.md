@@ -1,6 +1,19 @@
 # Changelog
 
-## 0.1.1 - Unreleased
+## 0.2.0 - Unreleased
+
+### Added
+
+- Android ANPR vertical slice with CameraX analysis, ML Kit OCR, candidate stabilization, durable local event storage, offline retry queue, configurable API synchronization, and a live vehicle-state dashboard.
+- Parking capacity configuration and local occupancy calculation.
+- SHA-256 validated Android update manifest and release publishing workflow.
+- Unit coverage for occupancy and last-seen rules.
+
+### Fixed
+
+- Use an AppCompat-compatible theme for `MainActivity`.
+
+## 0.1.1
 
 ### Added
 
