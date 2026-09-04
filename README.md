@@ -11,9 +11,11 @@ A camera-first vehicle movement tracker for compounds and parking areas. Each An
 
 Use four phones for the four lanes, or add more phones for additional lanes. Each phone can be independently assigned a role.
 
-## Current release
+## Current version
 
-Version **0.2.0** is the first Android ANPR vertical slice. It includes camera analysis, plate candidate stabilization, durable local event persistence, an offline retry queue, configurable API sync, vehicle-state API, a live web dashboard, CI and a SHA-256 validated update mechanism.
+Version **0.3.0** is the current development baseline. It includes camera analysis, plate candidate stabilization, durable local event persistence, an offline retry queue, configurable API sync, vehicle-state API, a live web dashboard, CI, and a SHA-256 validated update mechanism.
+
+No production GitHub Release is currently published. Until a production-signed APK is published, deployment should use a manually verified APK built from the repository. Do not enable unattended updates against an unsigned or debug artifact.
 
 ## Important ANPR limitation
 
@@ -25,7 +27,7 @@ This release uses general text recognition rather than a dedicated license-plate
 gradle :app:testDebugUnitTest :app:assembleDebug
 ```
 
-GitHub Actions builds the debug APK and runs unit tests. Tagged releases publish the APK as a GitHub Release.
+GitHub Actions builds the debug APK and runs unit tests. A production release should publish only a protected, production-signed APK as the update artifact.
 
 ## Server
 
@@ -65,12 +67,15 @@ See `docs/PRD-ANPR.md` and `docs/ARCHITECTURE-ANPR.md`.
 
 The app checks a small update manifest hosted from the repository's `main` branch. A newer release is downloaded only after the manifest identifies it; the APK SHA-256 must match before Android's package installer is invoked. A failed checksum prevents installation. Tagged GitHub releases are responsible for publishing the APK and verified manifest.
 
+Until a production-signed release is available, treat this update path as development-only and use manual installation of a verified APK for production devices.
+
 ## Security
 
 - Recognition is on-device; camera frames are not uploaded by the Android OCR pipeline.
 - API input is validated and event IDs make synchronization idempotent.
 - Production deployments should use HTTPS and device authentication.
 - The update manifest and APK are integrity checked before installation.
+- Production update artifacts must be signed with a protected Android signing key that is not stored in the repository.
 
 ## Roadmap
 
