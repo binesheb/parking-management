@@ -49,8 +49,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: npm
-          cache-dependency-path: server/package-lock.json
       - run: npm ci
       - run: npm test
 
@@ -89,6 +87,7 @@ jobs:
 
       - name: Build signed release APK
         env:
+          APP_VERSION: ${{ github.ref_name }}
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/parking-release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -102,7 +101,6 @@ jobs:
           APK=app/build/outputs/apk/release/app-release.apk
           test -s "$APK"
           jarsigner -verify -strict "$APK"
-          sha256sum "$APK"
           echo "sha256=$(sha256sum "$APK" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
