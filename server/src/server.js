@@ -7,6 +7,7 @@ const dbPath = resolve(process.env.DB_PATH ?? './data/parking.sqlite');
 mkdirSync(dirname(dbPath), { recursive: true });
 const db = new DatabaseSync(dbPath);
 const CAPACITY = Math.max(0, Number(process.env.PARKING_CAPACITY ?? 0));
+const DEVICE_ROLES = new Set(['COMPOUND_IN', 'COMPOUND_OUT', 'PARKING_IN', 'PARKING_OUT']);
 
 db.exec(`CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT UNIQUE NOT NULL, plate TEXT NOT NULL, event_type TEXT NOT NULL, timestamp INTEGER NOT NULL, device_role TEXT NOT NULL, created_at INTEGER NOT NULL)`);
 const app = Fastify({ logger: true });
@@ -34,7 +35,7 @@ app.get('/health', async () => ({ ok: true, service: 'parking-management-api', v
 app.post('/api/v1/events', async (request, reply) => {
   const b = request.body ?? {}; const eventId = String(b.eventId ?? ''); const plate = normalize(b.plate);
   const eventType = String(b.eventType ?? ''); const deviceRole = String(b.deviceRole ?? ''); const timestamp = Number(b.timestamp);
-  if (!eventId || !validPlate(plate) || !['COMPOUND_IN','COMPOUND_OUT','PARKING_IN','PARKING_OUT'].includes(eventType) || !Number.isFinite(timestamp)) return reply.code(400).send({ error: 'invalid_event' });
+  if (!eventId || !validPlate(plate) || !DEVICE_ROLES.has(eventType) || !DEVICE_ROLES.has(deviceRole) || !Number.isFinite(timestamp)) return reply.code(400).send({ error: 'invalid_event' });
   if (eventType === 'PARKING_IN' && CAPACITY > 0 && state().occupied >= CAPACITY) return reply.code(409).send({ error: 'parking_full', capacity: CAPACITY });
   const existing = db.prepare('SELECT id FROM events WHERE event_id=?').get(eventId);
   if (existing) return reply.code(200).send({ id: Number(existing.id), eventId, duplicate: true });
