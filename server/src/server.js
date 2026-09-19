@@ -36,9 +36,9 @@ app.post('/api/v1/events', async (request, reply) => {
   const b = request.body ?? {}; const eventId = String(b.eventId ?? ''); const plate = normalize(b.plate);
   const eventType = String(b.eventType ?? ''); const deviceRole = String(b.deviceRole ?? ''); const timestamp = Number(b.timestamp);
   if (!eventId || !validPlate(plate) || !DEVICE_ROLES.has(eventType) || !DEVICE_ROLES.has(deviceRole) || !Number.isFinite(timestamp)) return reply.code(400).send({ error: 'invalid_event' });
-  if (eventType === 'PARKING_IN' && CAPACITY > 0 && state().occupied >= CAPACITY) return reply.code(409).send({ error: 'parking_full', capacity: CAPACITY });
   const existing = db.prepare('SELECT id FROM events WHERE event_id=?').get(eventId);
   if (existing) return reply.code(200).send({ id: Number(existing.id), eventId, duplicate: true });
+  if (eventType === 'PARKING_IN' && CAPACITY > 0 && state().occupied >= CAPACITY) return reply.code(409).send({ error: 'parking_full', capacity: CAPACITY });
   const r = db.prepare('INSERT INTO events(event_id,plate,event_type,timestamp,device_role,created_at) VALUES(?,?,?,?,?,?)').run(eventId, plate, eventType, timestamp, deviceRole, Date.now());
   return reply.code(201).send({ id: Number(r.lastInsertRowid), eventId, plate, eventType, timestamp, deviceRole });
 });
