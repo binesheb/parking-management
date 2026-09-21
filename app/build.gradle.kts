@@ -9,7 +9,7 @@ android {
         applicationId = "com.binesheb.parking"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
+        versionCode = System.getenv("APP_VERSION_CODE")?.toIntOrNull() ?: 2
         versionName = System.getenv("APP_VERSION") ?: "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
