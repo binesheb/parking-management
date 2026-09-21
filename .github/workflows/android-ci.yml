@@ -88,6 +88,26 @@ jobs:
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
+      - name: Derive Android versionCode from release tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Release tag must be SemVer x.y.z: $GITHUB_REF_NAME"
+            exit 1
+          fi
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+          VERSION_CODE=$((MAJOR * 1000000 + MINOR * 1000 + PATCH + 1))
+          if (( VERSION_CODE > 2100000000 )); then
+            echo "Derived Android versionCode is too large: $VERSION_CODE"
+            exit 1
+          fi
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "APP_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "Release $VERSION -> Android versionCode $VERSION_CODE"
+
       - name: Decode protected signing keystore
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -95,7 +115,6 @@ jobs:
 
       - name: Build signed release APK
         env:
-          APP_VERSION: ${{ github.ref_name }}
           ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/parking-release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -125,6 +144,7 @@ jobs:
       - name: Publish verified update manifest
         env:
           APK_SHA: ${{ steps.apk.outputs.sha256 }}
+          APP_VERSION_CODE: ${{ env.APP_VERSION_CODE }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
@@ -137,6 +157,7 @@ jobs:
           if not re.fullmatch(r'\d+\.\d+\.\d+', version):
               raise SystemExit(f'Invalid release version: {version}')
           data.update({
+              'versionCode': int(os.environ['APP_VERSION_CODE']),
               'versionName': version,
               'apkUrl': f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/releases/latest/download/parking-management.apk",
               'sha256': os.environ['APK_SHA'],
