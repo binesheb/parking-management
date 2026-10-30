@@ -11,6 +11,9 @@ import java.net.URL
 import java.security.MessageDigest
 import kotlin.concurrent.thread
 
+internal fun isValidApkSha256(value: String): Boolean =
+    value.matches(Regex("^[a-fA-F0-9]{64}$")) && value != "0".repeat(64)
+
 object UpdateManager {
     private const val manifestUrl = "https://raw.githubusercontent.com/binesheb/parking-management/main/releases/android.json"
     fun check(context: Context, currentVersionCode: Int, onResult: (String) -> Unit) = thread {
@@ -21,7 +24,7 @@ object UpdateManager {
             val sha = obj.getString("sha256")
             if (apkUrl.protocol != "https" || apkUrl.host != "github.com" ||
                 !apkUrl.path.startsWith("/binesheb/parking-management/releases/") ||
-                !sha.matches(Regex("^[a-fA-F0-9]{64}$")) || sha == "0".repeat(64)) {
+                !isValidApkSha256(sha)) {
                 return@thread onResult("invalid_manifest")
             }
             val apk = File(context.cacheDir, "parking-update.apk")
