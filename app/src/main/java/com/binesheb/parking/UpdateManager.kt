@@ -21,7 +21,7 @@ object UpdateManager {
             val sha = obj.getString("sha256")
             if (apkUrl.protocol != "https" || apkUrl.host != "github.com" ||
                 !apkUrl.path.startsWith("/binesheb/parking-management/releases/") ||
-                !sha.matches(Regex("^[a-fA-F0-9]{64}$"))) {
+                !sha.matches(Regex("^[a-fA-F0-9]{64}$")) || sha == "0".repeat(64)) {
                 return@thread onResult("invalid_manifest")
             }
             val apk = File(context.cacheDir, "parking-update.apk")
