@@ -1,5 +1,6 @@
 package com.binesheb.parking
 
+import java.net.URL
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
