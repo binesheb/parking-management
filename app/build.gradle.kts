@@ -2,7 +2,7 @@ plugins { id("com.android.application") }
 
 android {
     namespace = "com.binesheb.parking"
-    compileSdk = 36
+    compileSdk = 37
     buildFeatures { buildConfig = true }
 
     defaultConfig {
