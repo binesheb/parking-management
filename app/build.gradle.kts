@@ -2,7 +2,7 @@ plugins { id("com.android.application") }
 
 android {
     namespace = "com.binesheb.parking"
-    compileSdk = 36
+    compileSdk = 37
     buildFeatures { buildConfig = true }
 
     defaultConfig {
@@ -39,7 +39,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.camera:camera-camera2:1.6.1")
