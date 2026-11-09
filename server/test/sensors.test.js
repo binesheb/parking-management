@@ -44,6 +44,11 @@ test('sensor registration, event idempotency, sequence validation, heartbeat and
   assert.equal(slots.json()[0].status, 'OCCUPIED');
   assert.equal(slots.json()[0].online, true);
 
+  db.prepare('UPDATE sensor_devices SET last_seen_at = ? WHERE device_id = ?').run(Date.now() - 60001, 'SP-TEST-001');
+  const staleSlots = await app.inject({ method: 'GET', url: '/api/v1/sensors/slots' });
+  assert.equal(staleSlots.json()[0].status, 'UNKNOWN');
+  assert.equal(staleSlots.json()[0].online, false);
+
   const badAuth = await app.inject({ method: 'POST', url: '/api/v1/sensors/heartbeat', headers: { authorization: 'Bearer wrong' }, payload: { uptimeSeconds: 1 } });
   assert.equal(badAuth.statusCode, 401);
 });
