@@ -100,7 +100,7 @@ void loadOutbox() {
 }
 
 void enqueueEvent(const String &next, float confidence) {
-  if (outbox.size() >= 32) {
+  if (outbox.size() >= 12) {
     // Preserve the newest state transitions; oldest pending item is discarded only at hard capacity.
     outbox.erase(outbox.begin());
   }
@@ -403,6 +403,7 @@ void setup() {
   String macSuffix = String(static_cast<uint32_t>(ESP.getEfuseMac()), HEX);
   while (macSuffix.length() < 4) macSuffix = "0" + macSuffix;
   setupKey = macSuffix.substring(macSuffix.length() - 4);
+  Serial.printf("Local calibration setup key: %s\\n", setupKey.c_str());
   cfg.wifiSsid = prefs.getString("ssid", "");
   cfg.wifiPassword = prefs.getString("password", "");
   cfg.serverUrl = trimSlash(prefs.getString("server", ""));
