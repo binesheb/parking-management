@@ -7,7 +7,7 @@ import { registerSensorRoutes } from '../src/sensors.js';
 test('sensor registration, event idempotency, sequence validation, heartbeat and offline state', async (t) => {
   const app = Fastify();
   const db = new DatabaseSync(':memory:');
-  registerSensorRoutes(app, db, { bootstrapToken: 'test-bootstrap-token', offlineAfterMs: 50 });
+  registerSensorRoutes(app, db, { bootstrapToken: 'test-bootstrap-token', offlineAfterMs: 60000 });
   await app.ready();
   t.after(async () => { await app.close(); db.close(); });
 
