@@ -25,7 +25,7 @@ Optical acceptance: all four bay boundaries and a 10–15% margin are visible; n
 
 ## 3. Enclosure and mounting
 
-Prototype envelope: 100 x 80 x 45 mm (excluding cable gland and bracket). Final dimensions depend on the actual camera carrier and lens protrusion.
+Prototype envelope: 100 x 80 x 45 mm (excluding cable gland and bracket). A parametric OpenSCAD starting model is provided at `hardware/enclosure/smartpark-v1.scad`; export `part = "base"` and `part = "lid"` separately. Final dimensions, clip positions and lens aperture must be adjusted after measuring the actual camera carrier and lens protrusion.
 
 - Ceiling bracket: two fixing points, slotted adjustment for aiming, mechanical anti-rotation feature.
 - Housing: PETG prototype; production candidate flame-retardant ABS or PC/ABS.
@@ -85,7 +85,7 @@ The existing Fastify + SQLite server receives:
 - `POST /api/v1/sensors/heartbeat` — per-device bearer token.
 - `GET /api/v1/sensors/slots` — slot state and derived online/offline health.
 
-Set `SENSOR_BOOTSTRAP_TOKEN` to a high-entropy secret before enrolling devices. Registration returns a random per-device token once; firmware stores it in NVS. Store only SHA-256 token hashes on the server. Keep the API on the trusted parking LAN or behind HTTPS/reverse-proxy authentication. Never commit Wi-Fi credentials or bootstrap tokens.
+Set `SENSOR_BOOTSTRAP_TOKEN` to a high-entropy secret before enrolling devices (for example, `export SENSOR_BOOTSTRAP_TOKEN=$(openssl rand -hex 32)` before `docker compose up --build`). Registration returns a random per-device token once; firmware stores it in NVS. Store only SHA-256 token hashes on the server. Keep the API on the trusted parking LAN or behind HTTPS/reverse-proxy authentication. Never commit Wi-Fi credentials or bootstrap tokens.
 
 Device states: PENDING/ACTIVE at registration; health becomes OFFLINE after 120 seconds without heartbeat. A stale device's slot is presented as UNKNOWN, not AVAILABLE. Duplicate event IDs are acknowledged without applying twice; stale sequence numbers are rejected.
 
