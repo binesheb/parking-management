@@ -109,11 +109,8 @@ void enqueueEvent(const String &next, float confidence) {
   event.occupancy = next;
   event.confidence = constrain(confidence, 0.0f, 1.0f);
   event.capturedAt = isoTimestamp();
-  if (!event.capturedAt.length()) {
-    sequenceNumber--;
-    Serial.println("Time not synchronized; event held until NTP is available");
-    return;
-  }
+  // If NTP is not ready yet, keep the event with an empty timestamp.
+  // flushOutbox fills it once the clock is synchronized.
   outbox.push_back(event);
   prefs.putUInt("sequence", sequenceNumber);
   persistOutbox();
@@ -175,6 +172,11 @@ bool sendEvent(const QueuedEvent &event) {
 void flushOutbox() {
   if (outbox.empty() || WiFi.status() != WL_CONNECTED || !cfg.deviceToken.length()) return;
   while (!outbox.empty()) {
+    if (!outbox.front().capturedAt.length()) {
+      outbox.front().capturedAt = isoTimestamp();
+      if (!outbox.front().capturedAt.length()) break;
+      persistOutbox();
+    }
     if (!sendEvent(outbox.front())) break;
     outbox.erase(outbox.begin());
     persistOutbox();
@@ -288,11 +290,11 @@ void sampleOccupancy() {
   lastScore = differenceScore(current);
   const bool candidateOccupied = lastScore >= OCCUPIED_THRESHOLD;
   if (candidateOccupied) {
-    occupiedStreak = min<uint8_t>(occupiedStreak + 1, 10);
+    if (occupiedStreak < 10) occupiedStreak++;
     clearStreak = 0;
     if (occupiedStreak >= 3) persistState("OCCUPIED", lastScore);
   } else {
-    clearStreak = min<uint8_t>(clearStreak + 1, 10);
+    if (clearStreak < 10) clearStreak++;
     occupiedStreak = 0;
     if (clearStreak >= 5) persistState("AVAILABLE", 1.0f - lastScore);
   }
@@ -342,6 +344,8 @@ void startProvisioning() {
 }
 
 void startLocalApi() {
+  static const char *headerKeys[] = {"X-Setup-Key"};
+  localServer.collectHeaders(headerKeys, 1);
   localServer.on("/api/status", HTTP_GET, []() {
     JsonDocument doc;
     doc["deviceId"] = cfg.deviceId;
@@ -395,6 +399,9 @@ void setup() {
   Serial.begin(115200);
   delay(300);
   prefs.begin("spv1", false);
+  String macSuffix = String(static_cast<uint32_t>(ESP.getEfuseMac()), HEX);
+  while (macSuffix.length() < 4) macSuffix = "0" + macSuffix;
+  setupKey = macSuffix.substring(macSuffix.length() - 4);
   cfg.wifiSsid = prefs.getString("ssid", "");
   cfg.wifiPassword = prefs.getString("password", "");
   cfg.serverUrl = trimSlash(prefs.getString("server", ""));
