@@ -41,6 +41,7 @@ String cameraStatus = "NOT_INITIALIZED";
 String detectorStatus = "CALIBRATION_REQUIRED";
 uint32_t sequenceNumber = 0;
 uint32_t lastSample = 0, lastHeartbeat = 0, lastRetry = 0;
+uint32_t lastWifiReconnect = 0, lastRegistrationAttempt = 0;
 uint8_t occupiedStreak = 0, clearStreak = 0;
 float lastScore = 0.0f;
 String setupKey;
@@ -434,12 +435,16 @@ void setup() {
 
 void loop() {
   localServer.handleClient();
-  if (WiFi.status() != WL_CONNECTED && cfg.wifiSsid.length()) {
+  if (WiFi.status() != WL_CONNECTED && cfg.wifiSsid.length() && nowMs - lastWifiReconnect >= 10000) {
+    lastWifiReconnect = nowMs;
     WiFi.reconnect();
-    delay(20);
   }
   const uint32_t nowMs = millis();
-  if (WiFi.status() == WL_CONNECTED && !cfg.deviceToken.length() && cfg.bootstrapToken.length()) registerDevice();
+  if (WiFi.status() == WL_CONNECTED && !cfg.deviceToken.length() && cfg.bootstrapToken.length() &&
+      nowMs - lastRegistrationAttempt >= 15000) {
+    lastRegistrationAttempt = nowMs;
+    registerDevice();
+  }
   if (nowMs - lastSample >= SAMPLE_MS && cameraStatus != "NOT_INITIALIZED") {
     lastSample = nowMs;
     sampleOccupancy();
