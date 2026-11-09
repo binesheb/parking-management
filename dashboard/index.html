@@ -1,1 +1,91 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Parking Management</title><style>body{font-family:system-ui;margin:24px;max-width:1100px}input,button{padding:10px;margin:4px}.cards{display:flex;gap:12px;flex-wrap:wrap}.card{padding:16px;border:1px solid #ddd;border-radius:10px;min-width:160px}table{width:100%;border-collapse:collapse;margin-top:20px}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}</style></head><body><h1>Parking Management</h1><p>Live event log and vehicle state.</p><input id="base" placeholder="http://server:8080" value="http://localhost:8080"><button onclick="load()">Refresh</button><div class="cards"><div class="card">Events<br><b id="events">-</b></div><div class="card">Compound inside<br><b id="compound">-</b></div><div class="card">Parking inside<br><b id="parking">-</b></div></div><table><thead><tr><th>Time</th><th>Plate</th><th>Event</th><th>Device</th></tr></thead><tbody id="rows"></tbody></table><script>async function load(){const b=document.getElementById('base').value.replace(/\/$/,'');const es=await fetch(b+'/api/v1/events?limit=200').then(r=>r.json());document.getElementById('events').textContent=es.length;const state=new Map;for(const e of [...es].reverse()){const s=state.get(e.plate)||{c:false,p:false};if(e.eventType==='COMPOUND_IN')s.c=true;if(e.eventType==='COMPOUND_OUT')s.c=false;if(e.eventType==='PARKING_IN')s.p=true;if(e.eventType==='PARKING_OUT')s.p=false;state.set(e.plate,s)}document.getElementById('compound').textContent=[...state.values()].filter(x=>x.c).length;document.getElementById('parking').textContent=[...state.values()].filter(x=>x.p).length;document.getElementById('rows').innerHTML=es.map(e=>`<tr><td>${new Date(e.timestamp).toLocaleString()}</td><td><b>${e.plate}</b></td><td>${e.eventType}</td><td>${e.deviceRole}</td></tr>`).join('')}load();setInterval(load,10000)</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Parking Management</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#17202a;background:#f7f8fa}
+body{margin:24px auto;padding:0 16px;max-width:1180px}
+input,button{padding:10px;margin:4px;border:1px solid #ccd2d8;border-radius:7px}
+button{cursor:pointer;background:#17202a;color:white}
+.cards{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+.card{padding:16px;border:1px solid #d9dee4;border-radius:10px;min-width:155px;background:white}
+.panel{margin-top:26px;padding:16px;background:white;border:1px solid #d9dee4;border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+td,th{padding:9px;border-bottom:1px solid #e6e9ed;text-align:left;white-space:nowrap}
+small,.muted{color:#68737d}.status{font-weight:650}.occupied{color:#b42318}.available{color:#067647}.unknown{color:#9a6700}
+</style>
+</head>
+<body>
+<h1>Parking Management</h1>
+<p class="muted">ANPR activity and SmartPark camera-slot sensors.</p>
+<input id="base" aria-label="API base URL" placeholder="http://server:8080" value="http://localhost:8080">
+<button id="refresh">Refresh</button>
+<div class="cards">
+ <div class="card">ANPR events<br><b id="events">-</b></div>
+ <div class="card">Compound inside<br><b id="compound">-</b></div>
+ <div class="card">Parking inside (ANPR)<br><b id="parking">-</b></div>
+ <div class="card">Camera slots<br><b id="sensorCount">-</b></div>
+</div>
+<section class="panel">
+<h2>Camera slot sensors</h2>
+<p class="muted">A disconnected or stale sensor is shown as UNKNOWN, never as an available bay.</p>
+<table><thead><tr><th>Area</th><th>Slot</th><th>Device</th><th>Occupancy</th><th>Connection</th><th>Wi-Fi RSSI</th><th>Last seen</th><th>Camera</th><th>Detector</th></tr></thead>
+<tbody id="sensorRows"><tr><td colspan="9">Loading…</td></tr></tbody></table>
+</section>
+<section class="panel">
+<h2>ANPR event log</h2>
+<table><thead><tr><th>Time</th><th>Plate</th><th>Event</th><th>Device</th></tr></thead><tbody id="eventRows"></tbody></table>
+</section>
+<p id="error" class="muted"></p>
+<script>
+const el=id=>document.getElementById(id);
+function cell(row,value){const td=document.createElement('td');td.textContent=value??'—';row.appendChild(td);return td}
+function statusClass(value){return String(value||'UNKNOWN').toLowerCase()}
+async function load(){
+ const base=el('base').value.replace(/\/$/,'');
+ el('error').textContent='';
+ try{
+  const [eventsResponse,sensorsResponse]=await Promise.all([
+   fetch(base+'/api/v1/events?limit=200'),
+   fetch(base+'/api/v1/sensors/slots')
+  ]);
+  if(!eventsResponse.ok)throw Error('ANPR API returned '+eventsResponse.status);
+  if(!sensorsResponse.ok)throw Error('Sensor API returned '+sensorsResponse.status);
+  const events=await eventsResponse.json(),sensors=await sensorsResponse.json();
+  el('events').textContent=events.length;
+  const state=new Map();
+  for(const event of [...events].reverse()){
+   const s=state.get(event.plate)||{compound:false,parking:false};
+   if(event.eventType==='COMPOUND_IN')s.compound=true;
+   if(event.eventType==='COMPOUND_OUT'){s.compound=false;s.parking=false}
+   if(event.eventType==='PARKING_IN')s.parking=true;
+   if(event.eventType==='PARKING_OUT')s.parking=false;
+   state.set(event.plate,s);
+  }
+  el('compound').textContent=[...state.values()].filter(x=>x.compound).length;
+  el('parking').textContent=[...state.values()].filter(x=>x.parking).length;
+  el('sensorCount').textContent=sensors.length;
+  const sensorRows=el('sensorRows');sensorRows.replaceChildren();
+  if(!sensors.length){const row=sensorRows.insertRow();cell(row,'No camera sensors registered').colSpan=9}
+  for(const sensor of sensors){
+   const row=sensorRows.insertRow();
+   cell(row,sensor.areaId);cell(row,sensor.slotId);cell(row,sensor.deviceId);
+   const status=cell(row,sensor.status);status.className='status '+statusClass(sensor.status);
+   cell(row,sensor.online?'ONLINE':'OFFLINE');
+   cell(row,sensor.wifiRssi===null?'—':sensor.wifiRssi+' dBm');
+   cell(row,sensor.lastSeenAt?new Date(sensor.lastSeenAt).toLocaleString():'Never');
+   cell(row,sensor.cameraStatus);cell(row,sensor.detectorStatus);
+  }
+  const eventRows=el('eventRows');eventRows.replaceChildren();
+  for(const event of events){
+   const row=eventRows.insertRow();
+   cell(row,new Date(event.timestamp).toLocaleString());cell(row,event.plate);
+   cell(row,event.eventType);cell(row,event.deviceRole);
+  }
+ }catch(error){el('error').textContent='Unable to refresh: '+error.message}
+}
+el('refresh').addEventListener('click',load);
+load();setInterval(load,10000);
+</script>
+</body></html>
