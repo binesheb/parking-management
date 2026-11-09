@@ -100,7 +100,7 @@ module base_shell() {
     // Lid screw holes.
     for (x=[10,outer_w-10])
       for (y=[10,outer_d-10])
-        translate([x,y,-0.1]) cylinder(h=base_h+1,d=3.2);
+        translate([x,y,-0.1]) cylinder(h=base_h+1,d=2.6);
   }
 }
 
