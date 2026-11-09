@@ -434,12 +434,12 @@ void setup() {
 }
 
 void loop() {
+  const uint32_t nowMs = millis();
   localServer.handleClient();
   if (WiFi.status() != WL_CONNECTED && cfg.wifiSsid.length() && nowMs - lastWifiReconnect >= 10000) {
     lastWifiReconnect = nowMs;
     WiFi.reconnect();
   }
-  const uint32_t nowMs = millis();
   if (WiFi.status() == WL_CONNECTED && !cfg.deviceToken.length() && cfg.bootstrapToken.length() &&
       nowMs - lastRegistrationAttempt >= 15000) {
     lastRegistrationAttempt = nowMs;
