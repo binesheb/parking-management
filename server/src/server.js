@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import { mkdirSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, resolve } from 'node:path';
+import { registerSensorRoutes } from './sensors.js';
 
 const dbPath = resolve(process.env.DB_PATH ?? './data/parking.sqlite');
 mkdirSync(dirname(dbPath), { recursive: true });
@@ -45,5 +46,7 @@ app.post('/api/v1/events', async (request, reply) => {
 app.get('/api/v1/events', async (request) => { const limit = Math.min(Math.max(Number(request.query?.limit ?? 100), 1), 1000); return db.prepare('SELECT id,event_id AS eventId,plate,event_type AS eventType,timestamp,device_role AS deviceRole FROM events ORDER BY timestamp DESC LIMIT ?').all(limit); });
 app.get('/api/v1/status', async () => state());
 app.get('/api/v1/vehicles/:plate', async (request, reply) => { const plate = normalize(request.params.plate); const result = state().vehicles.find(v => v.plate === plate); if (!result) return reply.code(404).send({ error: 'not_found' }); return { ...result, events: db.prepare('SELECT id,event_id AS eventId,plate,event_type AS eventType,timestamp,device_role AS deviceRole FROM events WHERE plate=? ORDER BY timestamp ASC').all(plate) }; });
+
+registerSensorRoutes(app, db);
 
 const port = Number(process.env.PORT ?? 8080); app.listen({ port, host: process.env.HOST ?? '0.0.0.0' }).catch(e => { app.log.error(e); process.exit(1); });
