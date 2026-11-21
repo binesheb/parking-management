@@ -2,6 +2,8 @@ services:
   api:
     build: ./server
     ports: ["8080:8080"]
+    environment:
+      SENSOR_BOOTSTRAP_TOKEN: ${SENSOR_BOOTSTRAP_TOKEN:-}
     volumes: ["parking-data:/app/data"]
     restart: unless-stopped
 volumes:
